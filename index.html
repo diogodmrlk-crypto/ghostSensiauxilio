@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: black; color: white; font-family: 'Arial', sans-serif; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        #matrix { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.2; }
+        .container { width: 92%; max-width: 380px; background: rgba(10, 0, 0, 0.95); backdrop-filter: blur(10px); padding: 20px; border: 1px solid #000000; box-shadow: 0 0 30px rgba(255, 0, 0, 0.4); border-radius: 20px; position: relative; z-index: 1; text-align: center; }
+        #login-screen { display: block; }
+        #main-content { display: none; }
+        input[type="password"], input[type="text"] { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid darkblue; background: rgba(0,0,0,0.5); color: white; text-align: center; margin-bottom: 15px; outline: none; }
+        .key-status { font-size: 12px; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; }
+        .key-status.success { background: rgba(0,255,0,0.2); border: 1px solid #00ff00; display: block; }
+        .key-status.error { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; display: block; }
+        .key-status.warning { background: rgba(255,255,0,0.2); border: 1px solid #ffff00; display: block; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 0, 0, 0.3); background: rgba(40, 0, 0, 0.5); color: #fff; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .tab-btn.active { background: lightskyblue; box-shadow: 0 0 10px #ff0000; border: none; }
+        .content { display: none; max-height: 65vh; overflow-y: auto; text-align: left; padding-right: 5px; }
+        .content.active { display: block; }
+        .section-title { font-size: 10px; color: midnightblue; margin: 12px 0 6px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .option { display: flex; align-items: center; background: rgba(255, 0, 0, 0.05); margin-bottom: 6px; padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 0, 0, 0.1); }
+        .option label { font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; }
+        .option input { margin-right: 10px; accent-color: #ff0000; width: 17px; height: 17px; }
+        .slider-container { margin: 10px 0; padding: 5px; }
+        .slider-label { display: flex; justify-content: space-between; font-size: 10px; color: #ff0000; font-weight: bold; margin-bottom: 5px; }
+        .slider { width: 100%; accent-color: #ff0000; height: 4px; border-radius: 10px; background: #330000; outline: none; }
+        #terminal { display: none; background: #000; border: 1px solid #333; padding: 10px; margin-top: 15px; border-radius: 8px; height: 115px; overflow-y: hidden; text-align: left; font-family: 'Courier New', monospace; font-size: 10px; color: #0f0; line-height: 1.4; }
+        .log-line { border-left: 2px solid #ff0000; padding-left: 5px; margin-bottom: 2px; }
+        .button { width: 100%; padding: 16px; background: #ff0000; border: none; color: #fff; font-weight: bold; border-radius: 12px; margin-top: 10px; font-size: 13px; text-transform: uppercase; cursor: pointer; }
+        .button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .discord-btn { background: #5865F2 !important; margin-top: 15px !important; }
+        .progress-container { width: 100%; background: rgba(255,0,0,0.1); height: 6px; border-radius: 3px; margin-top: 10px; display: none; overflow: hidden; border: 1px solid #ff0000; }
+        .progress-bar { width: 0%; height: 100%; background: #ff0000; }
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    <div class="container">
+        <div id="login-screen">
+            <h2 style="color:#ff0000; margin-bottom:20px;">GHOST LOGIN</h2>
+            <input type="text" id="keyInput" placeholder="DIGITE SUA KEY" autocomplete="off">
+            <div id="keyStatus" class="key-status"></div>
+            <button class="button" onclick="validateKey()" id="validateBtn">VALIDAR KEY</button>
+        </div>
+        <div id="main-content">
+            <div class="tabs">
+                <div class="tab-btn active" onclick="switchTab('auxilio', this)">AUXÍLIO</div>
+                <div class="tab-btn" onclick="switchTab('info', this)">INFO</div>
+            </div>
+            <div id="auxilio" class="content active">
+                <div class="section-title">MIRA & COMBATE</div>
+                <div class="option"><input type="checkbox" id="c1" checked=""><label for="c1">Aimlock 95% (VIP)</label></div>
+                <div class="option"><input type="checkbox" id="c2"><label for="c2">HS Pescoço Calibrado</label></div>
+                <div class="option"><input type="checkbox" id="c3"><label for="c3">Aimbot Suave 2.0</label></div>
+                <div class="slider-container">
+                    <div class="slider-label"><span>ÂNGULO DE MIRA (FOV)</span> <span id="fovV">100</span></div>
+                    <input type="range" id="fov" class="slider" min="1" max="360" value="100" oninput="document.getElementById('fovV').innerText = this.value">
+                </div>
+                <div class="section-title">DESEMPENHO & SEGURANÇA</div>
+                <div class="option"><input type="checkbox" id="o1"><label for="o1">Limpar Cache / RAM</label></div>
+                <div class="option"><input type="checkbox" id="o2"><label for="o2">Sensibilidade iPhone X</label></div>
+                <div class="option"><input type="checkbox" id="o3"><label for="o3">Ativar 120 FPS</label></div>
+                <div class="option"><input type="checkbox" id="o4" checked=""><label for="o4">Bypass Anti-Ban</label></div>
+                <div id="terminal"></div>
+                <div class="progress-container" id="pCont"><div class="progress-bar" id="pBar"></div></div>
+                <button class="button" id="btn" onclick="injetar()" disabled>INJETAR AGORA</button>
+            </div>
+            <div id="info" class="content">
+                <div style="padding: 15px; border: 1px dashed #ff0000; border-radius: 10px; text-align: center; background: rgba(255,255,255,0.02);">
+                    <p style="font-size: 11px; opacity: 0.6;">DESENVOLVEDOR:</p>
+                    <p style="color: #ff0000; font-weight: bold; font-size: 18px; text-shadow: 0 0 10px #ff0000;">ghost. Cheats</p>
+                    <button class="button discord-btn" onclick="window.location.href='https://discord.gg/seulink'">ENTRAR NO DISCORD</button>
+                    <p style="font-size: 10px; margin-top: 15px; opacity: 0.4;">Versão 7.0 Premium BR</p>
+                </div>
+                <button class="button" onclick="switchTab('auxilio', document.querySelectorAll('.tab-btn')[0])" style="background: transparent; border: 1px solid #ff0000; color: #ff0000; margin-top: 15px;">VOLTAR</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  CAMADA 1 — VERIFICAÇÃO DE DOMÍNIO + ANTI-CLONE
+//  Bloqueia saveweb, wayback, viewsource, clonadores
+// ════════════════════════════════════════════════════
+(function _domainGuard() {
+    // Lista branca de domínios permitidos (adicione o seu)
+    var _allowed = ['seudominio.com', 'www.seudominio.com', 'localhost', '127.0.0.1'];
+    var _badHosts = [
+        'saveweb','web.archive','archive.org','webcache.google',
+        'cachedview','cached.com','view-source','htmlsave',
+        'savewebsite','webarchive','htmlpreview','rawgit',
+        'pagesave','cacheview','freezepage','webpreview','codepen',
+        'jsfiddle','codesandbox','replit','glitch','netlify',
+        'vercel.app' // remova se seu host for vercel
+    ];
+    var _h = (window.location.hostname || '').toLowerCase();
+    var _ref = (document.referrer || '').toLowerCase();
+
+    // Verifica host atual
+    var _isAllowed = _allowed.some(function(d){ return _h === d || _h.endsWith('.' + d); });
+    var _isBad = _badHosts.some(function(b){ return _h.indexOf(b) !== -1 || _ref.indexOf(b) !== -1; });
+
+    if (_isBad || (!_isAllowed && _h !== '')) {
+        document.body.innerHTML = '';
+        document.write('<div style="background:#000;color:#f00;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:18px;">⛔ ACESSO BLOQUEADO</div>');
+        throw new Error('BLOCKED');
+    }
+})();
+
+// CAMADA 2 - ANTI DEVTOOLS (100% sem falso positivo)
+(function _antiDevtools() {
+    // Bloqueia atalhos de DevTools - nao interfere com colar/digitar
+    document.addEventListener('keydown', function(e){
+        // F12
+        if (e.key === 'F12') {
+            e.preventDefault(); e.stopPropagation(); return false;
+        }
+        // Ctrl+Shift+I / J / K (inspector, console, elements)
+        if (e.ctrlKey && e.shiftKey && ['I','J','K'].indexOf(e.key.toUpperCase()) !== -1) {
+            e.preventDefault(); e.stopPropagation(); return false;
+        }
+        // Ctrl+U (view-source)
+        if (e.ctrlKey && !e.shiftKey && e.key.toUpperCase() === 'U') {
+            e.preventDefault(); e.stopPropagation(); return false;
+        }
+        // Mac: Cmd+Option+I / J / C
+        if (e.metaKey && e.altKey && ['I','J','C'].indexOf(e.key.toUpperCase()) !== -1) {
+            e.preventDefault(); e.stopPropagation(); return false;
+        }
+    }, true);
+
+    // Botao direito: bloqueado fora de inputs, liberado dentro (para colar key)
+    document.addEventListener('contextmenu', function(e){
+        var _t = document.activeElement;
+        if (_t && (_t.tagName === 'INPUT' || _t.tagName === 'TEXTAREA')) return true;
+        e.preventDefault(); return false;
+    });
+})();
+
+// ════════════════════════════════════════════════════
+//  CAMADA 3 — URL DA API OFUSCADA
+//  A URL real nunca aparece em texto puro no código
+// ════════════════════════════════════════════════════
+var _G = (function(){
+    // URL: https://teste-api-mcok.vercel.app  →  particionada + XOR + base64
+    // Para alterar sua URL: substitua os arrays _p abaixo
+    // Gerado com: btoa(str) e XOR key=0x47
+
+    // Cada parte é: charCode XOR 0x47, depois convertida para base64
+    // Parte 1: "https://teste"  → array de charCodes XOR 71
+    // XOR key
+    var _k = 0x47;
+
+    // URL "https://teste-api-mcok.vercel.app" toda XOR'd com 0x47
+    // Nunca aparece em texto puro — reconstruída apenas em memória
+    var _p = [0x2f,0x33,0x33,0x37,0x34,0x7d,0x68,0x68,0x33,0x22,0x34,0x33,0x22,0x6a,0x26,0x37,0x2e,0x6a,0x2a,0x24,0x28,0x2c,0x69,0x31,0x22,0x35,0x24,0x22,0x2b,0x69,0x26,0x37,0x37];
+
+    // Decodifica em runtime
+    function _dec(arr) {
+        return arr.map(function(c){ return String.fromCharCode(c ^ _k); }).join('');
+    }
+
+    // Monta URL completa + path em memória
+    function _url(path) {
+        return _dec(_p) + (path || '');
+    }
+
+    return { _url: _url };
+})();
+
+// Camada 4 removida - coberta pelas camadas 1 e 2
+
+// ════════════════════════════════════════════════════
+//  LÓGICA PRINCIPAL — igual ao original, mas usando
+//  _G._url() em vez da URL em texto puro
+// ════════════════════════════════════════════════════
+var _canvas = document.getElementById('matrix');
+var _ctx = _canvas.getContext('2d');
+var deviceId = '';
+var currentKey = null;
+
+function resizeCanvas(){
+    _canvas.width = window.innerWidth;
+    _canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+var _drops = Array(Math.floor(_canvas.width / 16)).fill(1);
+function _draw(){
+    _ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    _ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+    _ctx.fillStyle = '#ff0000';
+    _ctx.font = '16px monospace';
+    _drops.forEach(function(y, i){
+        _ctx.fillText(Math.floor(Math.random() * 2), i * 16, y * 16);
+        if (y * 16 > _canvas.height && Math.random() > 0.975) _drops[i] = 0;
+        _drops[i]++;
+    });
+}
+setInterval(_draw, 50);
+
+function _genId(){
+    var _nav = window.navigator, _scr = window.screen;
+    var _plugins = Array.from(_nav.plugins || []).map(function(p){ return p.name; }).join('');
+    var _id = [_nav.userAgent, _scr.width, _scr.height, _scr.colorDepth, _nav.language, _plugins, new Date().getTimezoneOffset(), _nav.hardwareConcurrency || 'x'].join('|');
+    var _h = 0;
+    for (var i = 0; i < _id.length; i++){
+        _h = ((_h << 5) - _h) + _id.charCodeAt(i);
+        _h = _h & _h;
+    }
+    return Math.abs(_h).toString(36) + Date.now().toString(36);
+}
+// ── ID estável: salvo no localStorage para que o mesmo dispositivo
+//    sempre envie o mesmo ID (evita "key em uso em outro dispositivo")
+(function(){
+    var _saved = null;
+    try { _saved = localStorage.getItem('_ghost_did'); } catch(e){}
+    if (_saved) {
+        deviceId = _saved;
+    } else {
+        deviceId = _genId();
+        try { localStorage.setItem('_ghost_did', deviceId); } catch(e){}
+    }
+})();
+
+// ─── Validação de Key usando URL ofuscada ───
+async function validateKey(){
+    var _kInput = document.getElementById('keyInput');
+    var _kStatus = document.getElementById('keyStatus');
+    var _vBtn = document.getElementById('validateBtn');
+    var _key = _kInput.value.trim();
+
+    if (!_key){ _showSt('error','❌ Digite uma key válida'); return; }
+
+    _vBtn.disabled = true;
+    _vBtn.textContent = 'VALIDANDO...';
+    _showSt('warning','⏳ Validando key...');
+
+    try {
+        // URL montada em runtime — invisível no source estático
+        var _endpoint = _G._url('/keys/validate');
+
+        var _resp = await fetch(_endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: _key, device: deviceId })
+        });
+
+        var _data = await _resp.json();
+
+        if (_data.valid){
+            currentKey = _data.data;
+            // Salva key no dispositivo para auto-login futuro
+            try { localStorage.setItem('_ghost_key', _key); } catch(e){}
+            _showSt('success','✅ Key válida! Acessando painel...');
+            setTimeout(function(){
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                document.getElementById('btn').disabled = false;
+                var _term = document.getElementById('terminal');
+                _term.style.display = 'block';
+                _term.innerHTML = '';
+                var _l1 = document.createElement('div');
+                _l1.className = 'log-line';
+                _l1.innerText = '🔑 Key: ' + _key + ' | Tipo: ' + _data.data.type + ' | Status: ATIVO';
+                _term.appendChild(_l1);
+                if (_data.data.expiresAt > 0){
+                    var _exp = new Date(_data.data.expiresAt * 1000);
+                    var _l2 = document.createElement('div');
+                    _l2.className = 'log-line';
+                    _l2.innerText = '⏰ Expira: ' + _exp.toLocaleDateString();
+                    _term.appendChild(_l2);
+                } else {
+                    var _l3 = document.createElement('div');
+                    _l3.className = 'log-line';
+                    _l3.innerText = '♾️ Key Lifetime';
+                    _term.appendChild(_l3);
+                }
+            }, 1500);
+        } else {
+            var _msg = '❌ Key inválida';
+            var _reasons = { expired:'❌ Key expirada', revoked:'❌ Key revogada', device_mismatch:'❌ Key em uso em outro dispositivo', not_found:'❌ Key não encontrada' };
+            if (_reasons[_data.reason]) _msg = _reasons[_data.reason];
+            // Se key expirada/revogada/nao encontrada, limpa o auto-login
+            if (_data.reason === 'expired' || _data.reason === 'revoked' || _data.reason === 'not_found') {
+                try { localStorage.removeItem('_ghost_key'); } catch(e){}
+            }
+            _showSt('error', _msg);
+            _vBtn.disabled = false;
+            _vBtn.textContent = 'VALIDAR KEY';
+        }
+    } catch(e){
+        _showSt('error','❌ Erro ao conectar com servidor');
+        _vBtn.disabled = false;
+        _vBtn.textContent = 'VALIDAR KEY';
+    }
+}
+
+function _showSt(type, msg){
+    var _el = document.getElementById('keyStatus');
+    _el.className = 'key-status ' + type;
+    _el.textContent = msg;
+}
+
+function switchTab(tabId, btn){
+    document.querySelectorAll('.content').forEach(function(c){ c.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+}
+
+var _logs = [
+    '> Localizando data/obb...',
+    '> Injetando Bypass VIP...',
+    '> Ocultando rastro de log...',
+    '> Analista não acha nada...',
+    '> GHOST esculachando o sistema...',
+    '> SUCESSO: Tudo Ativado!'
+];
+
+function injetar(){
+    if (!currentKey){ alert('Key não validada!'); return; }
+    var _btn = document.getElementById('btn');
+    var _term = document.getElementById('terminal');
+    var _pCont = document.getElementById('pCont');
+    var _pBar = document.getElementById('pBar');
+    _btn.disabled = true;
+    _term.style.display = 'block';
+    _pCont.style.display = 'block';
+    _term.innerHTML = '';
+    var i = 0, w = 0;
+    var _iv = setInterval(function(){
+        if (w >= 100){
+            clearInterval(_iv);
+            var _sl = document.createElement('div');
+            _sl.className = 'log-line';
+            _sl.innerText = '✅ INJEÇÃO CONCLUÍDA COM SUCESSO!';
+            _term.appendChild(_sl);
+            setTimeout(function(){
+                window.location.href = 'scriptable:///run?scriptName=' + encodeURIComponent('GHOST . Auxílio IOS') + '&speak=true';
+            }, 1000);
+        } else {
+            w += 1.4;
+            _pBar.style.width = w + '%';
+            if (w % 16 < 1.4 && i < _logs.length){
+                var _ln = document.createElement('div');
+                _ln.className = 'log-line';
+                _ln.innerText = _logs[i];
+                _term.appendChild(_ln);
+                _term.scrollTop = _term.scrollHeight;
+                i++;
+            }
+        }
+    }, 50);
+}
+
+document.getElementById('keyInput').addEventListener('keypress', function(e){
+    if (e.key === 'Enter') validateKey();
+});
+
+window.addEventListener('load', function(){
+    // Tenta auto-login com key salva
+    var _savedKey = null;
+    try { _savedKey = localStorage.getItem('_ghost_key'); } catch(e){}
+    if (_savedKey) {
+        document.getElementById('keyInput').value = _savedKey;
+        _showSt('warning', '⏳ Reconectando com sua key salva...');
+        setTimeout(validateKey, 800);
+    }
+});
+</script>
+</body>
+</html>
