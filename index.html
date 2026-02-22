@@ -86,24 +86,23 @@
 //  Bloqueia saveweb, wayback, viewsource, clonadores
 // ════════════════════════════════════════════════════
 (function _domainGuard() {
-    // Lista branca de domínios permitidos (adicione o seu)
-    var _allowed = ['seudominio.com', 'www.seudominio.com', 'localhost', '127.0.0.1'];
+    // Bloqueia SOMENTE sites conhecidos de clone/cache/archive
+    // Qualquer outro dominio (incluindo vercel, SPCK, seu proprio host) passa livre
     var _badHosts = [
-        'saveweb','web.archive','archive.org','webcache.google',
-        'cachedview','cached.com','view-source','htmlsave',
-        'savewebsite','webarchive','htmlpreview','rawgit',
-        'pagesave','cacheview','freezepage','webpreview','codepen',
-        'jsfiddle','codesandbox','replit','glitch','netlify',
-        'vercel.app' // remova se seu host for vercel
+        'saveweb.io','web.archive.org','archive.org','webcache.googleusercontent',
+        'cachedview.nl','cached.com','htmlsave.com','savewebsite.net',
+        'webarchive.org','htmlpreview.github','freezepage.com',
+        'archive.ph','archive.is','archive.li','archive.fo',
+        'cachedpage','megalodon.jp','timetravel.mementoweb'
     ];
     var _h = (window.location.hostname || '').toLowerCase();
     var _ref = (document.referrer || '').toLowerCase();
 
-    // Verifica host atual
-    var _isAllowed = _allowed.some(function(d){ return _h === d || _h.endsWith('.' + d); });
-    var _isBad = _badHosts.some(function(b){ return _h.indexOf(b) !== -1 || _ref.indexOf(b) !== -1; });
+    var _isBad = _badHosts.some(function(b){
+        return _h.indexOf(b) !== -1 || _ref.indexOf(b) !== -1;
+    });
 
-    if (_isBad || (!_isAllowed && _h !== '')) {
+    if (_isBad) {
         document.body.innerHTML = '';
         document.write('<div style="background:#000;color:#f00;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:18px;">⛔ ACESSO BLOQUEADO</div>');
         throw new Error('BLOCKED');
